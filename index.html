@@ -1,0 +1,1379 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SHH Server Planner</title>
+    <style>
+      :root {
+        --bg: #0f1115;
+        --panel: #151922;
+        --border: #3a3f4a;
+        --text: #e6e9ef;
+        --muted: #a4adbd;
+        --accent: #3b82f6;
+        --font: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif;
+      }
+      body.theme-dim {
+        --bg: #141922;
+        --panel: #1c2330;
+        --border: #434b5a;
+        --text: #eef1f6;
+        --muted: #b1b9c8;
+        --accent: #60a5fa;
+      }
+      body.theme-light {
+        --bg: #eef2f7;
+        --panel: #ffffff;
+        --border: #cbd5e1;
+        --text: #0f172a;
+        --muted: #475569;
+        --accent: #2563eb;
+      }
+      body.theme-cyber {
+        --bg: #05070b;
+        --panel: #0b111b;
+        --border: #1b2b3c;
+        --text: #00ddff;
+        --muted: #6f98b6;
+        --accent: #39ff40;
+        --font: "Consolas", "Lucida Console", "Courier New", monospace;
+        background-color: var(--bg);
+        background-image: linear-gradient(rgba(57, 255, 183, 0.06) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(57, 255, 183, 0.05) 1px, transparent 1px);
+        background-size: 32px 32px;
+      }
+      body.theme-popy {
+        --bg: #fff6f2;
+        --panel: #ffe0f0;
+        --border: #ff7ab6;
+        --text: #2b0a1f;
+        --muted: #7c2a5c;
+        --accent: #ff3ea5;
+        --font: "Comic Sans MS", "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+      }
+      body.theme-military {
+        --bg: #1c2217;
+        --panel: #2a3323;
+        --border: #55624b;
+        --text: #e7eadc;
+        --muted: #b0b9a2;
+        --accent: #9fb55f;
+        --font: "Franklin Gothic Medium", "Arial Narrow", "Segoe UI", Arial, sans-serif;
+      }
+      body.theme-steel {
+        --bg: #1a1d22;
+        --panel: #232833;
+        --border: #4b5563;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --accent: #9aa6b2;
+        --font: "Arial", "Helvetica", "Segoe UI", sans-serif;
+        background-color: var(--bg);
+        background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent 45%);
+      }
+      body.theme-blueprint {
+        --bg: #0a1f44;
+        --panel: #102b5a;
+        --border: #2c5aa0;
+        --text: #e6f0ff;
+        --muted: #9db7e8;
+        --accent: #7cc4ff;
+        --font: "Courier New", "Lucida Console", "Consolas", monospace;
+        background-color: var(--bg);
+        background-image: linear-gradient(rgba(124, 196, 255, 0.12) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(124, 196, 255, 0.12) 1px, transparent 1px);
+        background-size: 28px 28px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: var(--font);
+        background-color: var(--bg);
+        color: var(--text);
+        overflow: hidden;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .app {
+        height: 100%;
+        padding: 12px;
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+      }
+      .shell {
+        width: 100%;
+        max-width: 1240px;
+        height: 100%;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        padding: 12px;
+        display: grid;
+        grid-template-columns: 200px 1fr;
+        gap: 12px;
+      }
+      .sidebar {
+        border: 1px solid var(--border);
+        background: var(--panel);
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .brand {
+        border: 1px solid var(--border);
+        padding: 8px;
+      }
+      .brand small {
+        display: block;
+        letter-spacing: 0.4em;
+        font-size: 10px;
+        color: var(--muted);
+      }
+      .brand strong {
+        display: block;
+        font-size: 12px;
+        margin-top: 4px;
+      }
+      .nav-button {
+        text-align: left;
+        padding: 8px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        cursor: pointer;
+      }
+      .nav-button.active {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .sidebar-footer {
+        margin-top: auto;
+        font-size: 11px;
+        color: var(--muted);
+        border-top: 1px solid var(--border);
+        padding-top: 8px;
+      }
+      .content {
+        border: 1px solid var(--border);
+        background: var(--panel);
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-height: 0;
+      }
+      .content-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .sub {
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .content-body {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+      }
+      .servers-view {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 12px;
+        min-height: 0;
+        height: 100%;
+      }
+      .settings-view {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .docs-view {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .panel {
+        border: 1px solid var(--border);
+        background: var(--bg);
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-height: 0;
+      }
+      .panel-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .panel.editing {
+        border-color: var(--accent);
+      }
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .span-2 {
+        grid-column: span 2;
+      }
+      label {
+        font-size: 12px;
+        color: var(--muted);
+        display: block;
+        margin-bottom: 4px;
+      }
+      input,
+      select,
+      textarea,
+      button {
+        font: inherit;
+        color: inherit;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 6px 8px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+      textarea {
+        resize: none;
+      }
+      button,
+      .file-btn {
+        padding: 6px 10px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        cursor: pointer;
+      }
+      button.primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #000000;
+      }
+      body.theme-cyber button.primary {
+        box-shadow: 0 0 0 1px var(--accent), 0 0 12px rgba(57, 255, 183, 0.25);
+      }
+      button.danger {
+        border-color: #ef4444;
+        color: #ef4444;
+      }
+      .toolbar {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 8px;
+        align-items: center;
+      }
+      .server-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        flex: 1;
+        min-height: 0;
+      }
+      .server-card {
+        border: 1px solid var(--border);
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        overflow: hidden;
+      }
+      .server-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .server-name {
+        font-size: 13px;
+        font-weight: 600;
+        margin: 0;
+      }
+      .server-meta,
+      .tiny {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .command {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 11px;
+        padding: 6px 8px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .badge {
+        border: 1px solid var(--border);
+        padding: 2px 6px;
+        font-size: 10px;
+      }
+      .pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .theme-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+        gap: 8px;
+      }
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px;
+        backdrop-filter: blur(2px);
+      }
+      .modal.hidden {
+        display: none;
+      }
+      .modal-card {
+        width: min(360px, 92vw);
+        border: 1px solid var(--border);
+        background: var(--panel);
+        padding: 12px;
+      }
+      .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .toast {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        padding: 6px 10px;
+        font-size: 12px;
+        z-index: 30;
+      }
+      .segment {
+        position: relative;
+        display: block;
+        cursor: pointer;
+      }
+      .segment input {
+        appearance: none;
+        -webkit-appearance: none;
+        position: absolute;
+        inset: 0;
+        margin: 0;
+        opacity: 0;
+      }
+      .segment span {
+        display: block;
+        text-align: center;
+        padding: 6px 8px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--muted);
+        cursor: pointer;
+        user-select: none;
+      }
+      .segment input:checked + span {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .segment input:focus-visible + span {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .toggle input {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 34px;
+        height: 18px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        position: relative;
+        cursor: pointer;
+      }
+      .toggle input::after {
+        content: "";
+        position: absolute;
+        top: 1px;
+        left: 1px;
+        width: 14px;
+        height: 14px;
+        background: var(--border);
+        transition: left 0.15s ease, background 0.15s ease;
+      }
+      .toggle input:checked {
+        border-color: var(--accent);
+      }
+      .toggle input:checked::after {
+        left: 17px;
+        background: var(--accent);
+      }
+      .toggle input:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .doc-list {
+        margin: 0;
+        padding-left: 16px;
+        display: grid;
+        gap: 6px;
+        font-size: 12px;
+      }
+      .doc-callout {
+        border: 1px dashed var(--border);
+        padding: 8px;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      @media (max-width: 1050px) {
+        .shell {
+          grid-template-columns: 180px 1fr;
+        }
+        .servers-view {
+          grid-template-columns: 300px 1fr;
+        }
+      }
+      @media (max-width: 900px) {
+        .shell {
+          grid-template-columns: 160px 1fr;
+        }
+        .servers-view {
+          grid-template-columns: 1fr;
+        }
+        .settings-view {
+          grid-template-columns: 1fr;
+        }
+        .docs-view {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-height: 760px) {
+        .shell {
+          padding: 8px;
+          gap: 8px;
+        }
+        .sidebar,
+        .content,
+        .panel {
+          padding: 8px;
+        }
+      }
+    </style>
+  </head>
+  <body class="theme-dark">
+    <div class="app">
+      <div class="shell">
+        <aside class="sidebar">
+          <div class="brand">
+            <small>SHH</small>
+            <strong>Server Board</strong>
+          </div>
+          <button class="nav-button active" data-view="servers">Servers</button>
+          <button class="nav-button" data-view="settings">Settings</button>
+          <button class="nav-button" data-view="docs">Docs</button>
+          <div class="sidebar-footer">Local only.</div>
+        </aside>
+
+        <section class="content">
+          <div class="content-header">
+            <div>
+              <h1>Servers</h1>
+              <div class="sub">Paste-ready SSH commands.</div>
+            </div>
+          </div>
+
+          <div class="content-body">
+            <div id="view-servers" class="servers-view">
+              <section class="panel" id="formPanel">
+                <div class="panel-title">
+                  <span id="formTitle">New server</span>
+                  <span id="formStatus" class="tiny"></span>
+                </div>
+                <form id="serverForm" class="form-grid">
+                  <div class="span-2">
+                    <label for="name">Name</label>
+                    <input id="name" name="name" required placeholder="Staging API" />
+                  </div>
+                  <div>
+                    <label for="username">User</label>
+                    <input id="username" name="username" required placeholder="ubuntu" />
+                  </div>
+                  <div>
+                    <label for="host">Host</label>
+                    <input id="host" name="host" required placeholder="203.0.113.10" />
+                  </div>
+                  <div>
+                    <label for="port">Port</label>
+                    <input id="port" name="port" type="number" min="1" max="65535" placeholder="22" />
+                  </div>
+                  <div>
+                    <label for="tool">Monitor</label>
+                    <select id="tool" name="tool">
+                      <option value="htop">htop</option>
+                      <option value="btop">btop</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="identity">Identity</label>
+                    <input id="identity" name="identity" placeholder="~/.ssh/id_ed25519" />
+                  </div>
+                  <div>
+                    <label for="sshOptions">SSH options</label>
+                    <input id="sshOptions" name="sshOptions" placeholder="-o ServerAliveInterval=30" />
+                  </div>
+                  <div class="span-2">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" name="notes" rows="2"></textarea>
+                  </div>
+                  <label class="span-2 toggle">
+                    <input id="favorite" type="checkbox" />
+                    Favorite
+                  </label>
+                  <div class="span-2" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button type="submit" id="saveBtn" class="primary">Save</button>
+                    <button type="button" id="resetBtn">Reset</button>
+                  </div>
+                </form>
+              </section>
+
+              <section class="panel">
+                <div class="toolbar">
+                  <input id="searchInput" placeholder="Search" />
+                  <select id="sortSelect">
+                    <option value="favorite">Favorites</option>
+                    <option value="name">Name A-Z</option>
+                    <option value="recent">Recent</option>
+                    <option value="created">Newest</option>
+                  </select>
+                  <button id="clearAllBtn" class="danger">Clear</button>
+                </div>
+
+                <div id="serverList" class="server-grid"></div>
+                <p id="emptyState" class="tiny hidden">No servers.</p>
+                <div class="pagination">
+                  <span id="countLabel">Showing 0 of 0</span>
+                  <div style="display: flex; gap: 8px; align-items: center;">
+                    <button id="prevPageBtn">Prev</button>
+                    <span id="pageLabel">Page 1 of 1</span>
+                    <button id="nextPageBtn">Next</button>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <div id="view-settings" class="settings-view hidden">
+              <section class="panel">
+                <div class="panel-title">Theme</div>
+                <div class="theme-row">
+                  <label class="segment">
+                    <input type="radio" name="theme" value="dark" form="settingsForm" />
+                    <span>Dark</span>
+                  </label>
+                  <label class="segment">
+                    <input type="radio" name="theme" value="dim" form="settingsForm" />
+                    <span>Dim</span>
+                  </label>
+                  <label class="segment">
+                    <input type="radio" name="theme" value="light" form="settingsForm" />
+                    <span>Light</span>
+                  </label>
+                  <label class="segment">
+                    <input type="radio" name="theme" value="cyber" form="settingsForm" />
+                    <span>Cyber</span>
+                  </label>
+                  <label class="segment">
+                    <input type="radio" name="theme" value="popy" form="settingsForm" />
+                    <span>Pop-y</span>
+                  </label>
+                  <label class="segment">
+                    <input type="radio" name="theme" value="military" form="settingsForm" />
+                    <span>Military</span>
+                  </label>
+                  <label class="segment">
+                    <input type="radio" name="theme" value="steel" form="settingsForm" />
+                    <span>Steel</span>
+                  </label>
+                  <label class="segment">
+                    <input type="radio" name="theme" value="blueprint" form="settingsForm" />
+                    <span>Blueprint</span>
+                  </label>
+                </div>
+              </section>
+
+              <section class="panel">
+                <div class="panel-title">Defaults</div>
+                <form id="settingsForm" class="form-grid">
+                  <div>
+                    <label for="settingsDefaultTool">Default monitor</label>
+                    <select id="settingsDefaultTool" name="defaultTool">
+                      <option value="htop">htop</option>
+                      <option value="btop">btop</option>
+                    </select>
+                  </div>
+                  <label class="span-2 toggle">
+                    <input id="settingsShowNotes" name="showNotes" type="checkbox" />
+                    Show notes
+                  </label>
+                  <label class="span-2 toggle">
+                    <input id="settingsAutoMark" name="autoMarkUsed" type="checkbox" />
+                    Auto mark on copy
+                  </label>
+                </form>
+              </section>
+
+              <section class="panel">
+                <div class="panel-title">Data</div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <button id="exportBtn">Export</button>
+                  <label class="file-btn">
+                    Import
+                    <input id="importInput" type="file" accept="application/json" class="hidden" />
+                  </label>
+                  <button id="resetSettingsBtn">Reset</button>
+                </div>
+                <div class="tiny">Use JSON for import/export.</div>
+              </section>
+            </div>
+
+            <div id="view-docs" class="docs-view hidden">
+              <section class="panel">
+                <div class="panel-title">Quick start</div>
+                <ol class="doc-list">
+                  <li>Add a server.</li>
+                  <li>Copy SSH or Monitor.</li>
+                  <li>Paste in your terminal.</li>
+                </ol>
+              </section>
+              <section class="panel">
+                <div class="panel-title">Notes</div>
+                <ul class="doc-list">
+                  <li>Port defaults to 22.</li>
+                  <li>Settings has theme + import/export.</li>
+                  <li>Everything stays in your browser.</li>
+                </ul>
+                <div class="doc-callout">Tip: click any command to copy.</div>
+              </section>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <div id="confirmModal" class="modal hidden" aria-hidden="true">
+      <div class="modal-card">
+        <div class="panel-title" id="confirmTitle">Confirm</div>
+        <div class="tiny" id="confirmMessage">Are you sure?</div>
+        <div class="modal-actions">
+          <button id="confirmCancelBtn">Cancel</button>
+          <button id="confirmActionBtn" class="danger">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <template id="serverCardTemplate">
+      <article class="server-card">
+        <div class="server-header">
+          <div>
+            <h3 class="server-name" data-field="name"></h3>
+            <p class="server-meta" data-field="meta"></p>
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button data-action="edit">Edit</button>
+            <button data-action="delete" class="danger">Delete</button>
+          </div>
+        </div>
+        <div>
+          <div class="footer">
+            <span class="tiny">SSH</span>
+            <button data-action="copy-ssh">Copy</button>
+          </div>
+          <div class="command" data-field="ssh"></div>
+        </div>
+        <div>
+          <div class="footer">
+            <span class="tiny">Monitor</span>
+            <button data-action="copy-monitor">Copy</button>
+          </div>
+          <div class="command" data-field="monitor"></div>
+        </div>
+        <div class="tiny hidden" data-field="notes"></div>
+        <div class="footer">
+          <span data-field="used"></span>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <span class="badge hidden" data-field="favorite">Favorite</span>
+            <button data-action="mark-used">Used</button>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <script>
+      const form = document.getElementById("serverForm");
+      const serverList = document.getElementById("serverList");
+      const emptyState = document.getElementById("emptyState");
+      const formStatus = document.getElementById("formStatus");
+      const formPanel = document.getElementById("formPanel");
+      const formTitle = document.getElementById("formTitle");
+      const saveBtn = document.getElementById("saveBtn");
+      const resetBtn = document.getElementById("resetBtn");
+      const clearAllBtn = document.getElementById("clearAllBtn");
+      const searchInput = document.getElementById("searchInput");
+      const sortSelect = document.getElementById("sortSelect");
+      const exportBtn = document.getElementById("exportBtn");
+      const importInput = document.getElementById("importInput");
+      const template = document.getElementById("serverCardTemplate");
+      const countLabel = document.getElementById("countLabel");
+      const pageLabel = document.getElementById("pageLabel");
+      const prevPageBtn = document.getElementById("prevPageBtn");
+      const nextPageBtn = document.getElementById("nextPageBtn");
+      const settingsForm = document.getElementById("settingsForm");
+      const settingsDefaultTool = document.getElementById("settingsDefaultTool");
+      const settingsShowNotes = document.getElementById("settingsShowNotes");
+      const settingsAutoMark = document.getElementById("settingsAutoMark");
+      const resetSettingsBtn = document.getElementById("resetSettingsBtn");
+      const viewServers = document.getElementById("view-servers");
+      const viewSettings = document.getElementById("view-settings");
+      const viewDocs = document.getElementById("view-docs");
+      const viewButtons = document.querySelectorAll("[data-view]");
+      const themeInputs = document.querySelectorAll('input[name="theme"]');
+      const confirmModal = document.getElementById("confirmModal");
+      const confirmTitle = document.getElementById("confirmTitle");
+      const confirmMessage = document.getElementById("confirmMessage");
+      const confirmCancelBtn = document.getElementById("confirmCancelBtn");
+      const confirmActionBtn = document.getElementById("confirmActionBtn");
+      const toast = document.getElementById("toast");
+
+      const STORAGE_KEY = "shh_servers_v1";
+      const SETTINGS_KEY = "shh_settings_v1";
+      const VIEW_KEY = "shh_view_v1";
+      const defaultSettings = {
+        theme: "dark",
+        pageSize: 4,
+        showNotes: true,
+        defaultTool: "htop",
+        autoMarkUsed: true,
+      };
+      const state = {
+        servers: [],
+        editingId: null,
+        filter: "",
+        sort: "favorite",
+        page: 1,
+        pageCount: 1,
+      };
+
+      let pendingDeleteId = null;
+      let confirmAction = null;
+      let toastTimer = null;
+
+      const uid = () => Math.random().toString(36).slice(2, 9);
+
+      const sanitize = (value) => (value || "").toString().trim();
+
+      const normalizePort = (value) => {
+        const port = parseInt(value, 10);
+        if (Number.isNaN(port) || port <= 0) return 22;
+        return port;
+      };
+
+      const buildSsh = (server, options = {}) => {
+        const port = normalizePort(server.port);
+        const opts = [];
+        if (options.tty) opts.push("-t");
+        if (server.identity) opts.push(`-i ${server.identity}`);
+        opts.push(`-p ${port}`);
+        if (server.sshOptions) opts.push(server.sshOptions);
+        return `ssh ${opts.join(" ")} ${server.username}@${server.host}`.trim();
+      };
+
+      const formatWhen = (iso) => {
+        if (!iso) return "Never used";
+        const date = new Date(iso);
+        if (Number.isNaN(date.getTime())) return "Never used";
+        return `Last used ${date.toLocaleDateString()} ${date.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}`;
+      };
+
+      const save = () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.servers));
+      };
+
+      const load = () => {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [];
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) return parsed;
+        } catch (err) {
+          console.warn("Failed to parse storage", err);
+        }
+        return [];
+      };
+
+      const loadSettings = () => {
+        const raw = localStorage.getItem(SETTINGS_KEY);
+        if (!raw) return { ...defaultSettings };
+        try {
+          const parsed = JSON.parse(raw);
+          return {
+            ...defaultSettings,
+            ...parsed,
+            pageSize: defaultSettings.pageSize,
+          };
+        } catch (err) {
+          console.warn("Failed to parse settings", err);
+        }
+        return { ...defaultSettings };
+      };
+
+      let settings = loadSettings();
+
+      const saveSettings = () => {
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      };
+
+      const applySettings = () => {
+        document.body.classList.remove(
+          "theme-dark",
+          "theme-dim",
+          "theme-light",
+          "theme-cyber",
+          "theme-popy",
+          "theme-military",
+          "theme-steel",
+          "theme-blueprint"
+        );
+        document.body.classList.add(`theme-${settings.theme}`);
+        if (!state.editingId) {
+          form.tool.value = settings.defaultTool;
+        }
+      };
+
+      const syncSettingsForm = () => {
+        themeInputs.forEach((input) => {
+          input.checked = input.value === settings.theme;
+        });
+        if (settingsDefaultTool) settingsDefaultTool.value = settings.defaultTool;
+        if (settingsShowNotes) settingsShowNotes.checked = settings.showNotes;
+        if (settingsAutoMark) settingsAutoMark.checked = settings.autoMarkUsed;
+      };
+
+      const readThemeValue = () => {
+        const selected = Array.from(themeInputs).find((input) => input.checked);
+        return selected ? selected.value : settings.theme || defaultSettings.theme;
+      };
+
+      const updateSettingsFromInputs = () => {
+        settings = {
+          ...settings,
+          theme: readThemeValue(),
+          pageSize: defaultSettings.pageSize,
+          defaultTool: settingsDefaultTool?.value || defaultSettings.defaultTool,
+          showNotes: settingsShowNotes?.checked ?? defaultSettings.showNotes,
+          autoMarkUsed: settingsAutoMark?.checked ?? defaultSettings.autoMarkUsed,
+        };
+        saveSettings();
+        applySettings();
+        state.page = 1;
+        render();
+      };
+
+      const setView = (view) => {
+        viewServers.classList.toggle("hidden", view !== "servers");
+        viewSettings.classList.toggle("hidden", view !== "settings");
+        viewDocs.classList.toggle("hidden", view !== "docs");
+        viewButtons.forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.view === view);
+        });
+        localStorage.setItem(VIEW_KEY, view);
+      };
+
+      const enterEditMode = (server) => {
+        state.editingId = server.id;
+        formTitle.textContent = "Edit server";
+        saveBtn.textContent = "Update";
+        resetBtn.textContent = "Cancel";
+        formPanel.classList.add("editing");
+        formStatus.textContent = `Editing ${server.name}`;
+      };
+
+      const exitEditMode = () => {
+        state.editingId = null;
+        formTitle.textContent = "New server";
+        saveBtn.textContent = "Save";
+        resetBtn.textContent = "Reset";
+        formPanel.classList.remove("editing");
+        formStatus.textContent = "";
+      };
+
+      const openConfirm = (server) => {
+        pendingDeleteId = server.id;
+        confirmTitle.textContent = "Delete server?";
+        confirmMessage.textContent = `Delete ${server.name}?`;
+        confirmActionBtn.textContent = "Delete";
+        confirmActionBtn.classList.add("danger");
+        confirmAction = () => {
+          state.servers = state.servers.filter((item) => item.id !== pendingDeleteId);
+          save();
+          render();
+        };
+        confirmModal.classList.remove("hidden");
+        confirmModal.setAttribute("aria-hidden", "false");
+      };
+
+      const closeConfirm = () => {
+        confirmModal.classList.add("hidden");
+        confirmModal.setAttribute("aria-hidden", "true");
+        pendingDeleteId = null;
+        confirmAction = null;
+      };
+
+      const openConfirmAction = ({ title, message, confirmLabel, danger, onConfirm }) => {
+        confirmTitle.textContent = title;
+        confirmMessage.textContent = message;
+        confirmActionBtn.textContent = confirmLabel || "Confirm";
+        confirmActionBtn.classList.toggle("danger", !!danger);
+        confirmAction = onConfirm;
+        confirmModal.classList.remove("hidden");
+        confirmModal.setAttribute("aria-hidden", "false");
+      };
+
+      const showToast = (message) => {
+        toast.textContent = message;
+        toast.classList.remove("hidden");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toast.classList.add("hidden");
+        }, 1800);
+      };
+
+      const resetForm = () => {
+        form.reset();
+        exitEditMode();
+        form.tool.value = settings.defaultTool;
+      };
+
+      const fillForm = (server) => {
+        form.name.value = server.name;
+        form.username.value = server.username;
+        form.host.value = server.host;
+        form.port.value = server.port || "";
+        form.tool.value = server.tool;
+        form.identity.value = server.identity || "";
+        form.sshOptions.value = server.sshOptions || "";
+        form.notes.value = server.notes || "";
+        form.favorite.checked = !!server.favorite;
+      };
+
+      const updateUsed = (id) => {
+        const server = state.servers.find((item) => item.id === id);
+        if (!server) return;
+        server.lastUsedAt = new Date().toISOString();
+        save();
+        render();
+      };
+
+      const render = () => {
+        const filtered = state.servers
+          .filter((server) => {
+            if (!state.filter) return true;
+            const haystack = `${server.name} ${server.username} ${server.host}`.toLowerCase();
+            return haystack.includes(state.filter);
+          })
+          .sort((a, b) => {
+            if (state.sort === "favorite") {
+              if (a.favorite === b.favorite) return a.name.localeCompare(b.name);
+              return a.favorite ? -1 : 1;
+            }
+            if (state.sort === "name") return a.name.localeCompare(b.name);
+            if (state.sort === "recent") {
+              return (b.lastUsedAt || "").localeCompare(a.lastUsedAt || "");
+            }
+            if (state.sort === "created") {
+              return (b.createdAt || "").localeCompare(a.createdAt || "");
+            }
+            return 0;
+          });
+
+        const total = filtered.length;
+        const pageSize = settings.pageSize;
+        const pageCount = Math.max(1, Math.ceil(total / pageSize));
+        state.pageCount = pageCount;
+        if (state.page > pageCount) state.page = pageCount;
+        const start = (state.page - 1) * pageSize;
+        const pageItems = filtered.slice(start, start + pageSize);
+
+        serverList.innerHTML = "";
+        emptyState.classList.toggle("hidden", total !== 0);
+
+        pageItems.forEach((server) => {
+          const card = template.content.cloneNode(true);
+          const sshCmd = buildSsh(server);
+          const monitorCmd = `${buildSsh(server, { tty: true })} '${server.tool}'`;
+
+          card.querySelector('[data-field="name"]').textContent = server.name;
+          card.querySelector('[data-field="meta"]').textContent = `${server.username}@${server.host}:${normalizePort(
+            server.port
+          )} • ${server.tool}`;
+          const favBadge = card.querySelector('[data-field="favorite"]');
+          if (server.favorite) favBadge.classList.remove("hidden");
+
+          const sshEl = card.querySelector('[data-field="ssh"]');
+          sshEl.textContent = sshCmd;
+          sshEl.title = sshCmd;
+          const monitorEl = card.querySelector('[data-field="monitor"]');
+          monitorEl.textContent = monitorCmd;
+          monitorEl.title = monitorCmd;
+          const notesEl = card.querySelector('[data-field="notes"]');
+          if (settings.showNotes && server.notes) {
+            notesEl.textContent = server.notes;
+            notesEl.classList.remove("hidden");
+          } else {
+            notesEl.textContent = "";
+            notesEl.classList.add("hidden");
+          }
+          card.querySelector('[data-field="used"]').textContent = formatWhen(server.lastUsedAt);
+
+          card.querySelector("article").dataset.id = server.id;
+          card.querySelector('[data-action="copy-ssh"]').dataset.cmd = encodeURIComponent(sshCmd);
+          card.querySelector('[data-action="copy-monitor"]').dataset.cmd = encodeURIComponent(monitorCmd);
+
+          serverList.appendChild(card);
+        });
+
+        const shownStart = total === 0 ? 0 : start + 1;
+        const shownEnd = Math.min(start + pageSize, total);
+        countLabel.textContent = total === 0 ? "Showing 0 of 0" : `Showing ${shownStart}-${shownEnd} of ${total}`;
+        pageLabel.textContent = `Page ${state.page} of ${pageCount}`;
+        prevPageBtn.disabled = state.page <= 1;
+        nextPageBtn.disabled = state.page >= pageCount;
+      };
+
+      const copyText = async (text) => {
+        try {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch (err) {
+          console.warn("Clipboard failed", err);
+        }
+        return false;
+      };
+
+      const handleSubmit = (event) => {
+        event.preventDefault();
+        const now = new Date().toISOString();
+        const rawPort = sanitize(form.port.value);
+        const portValue = rawPort ? parseInt(rawPort, 10) : null;
+        if (rawPort && (Number.isNaN(portValue) || portValue < 1 || portValue > 65535)) {
+          formStatus.textContent = "Port must be 1-65535.";
+          return;
+        }
+        const server = {
+          id: state.editingId || uid(),
+          name: sanitize(form.name.value),
+          username: sanitize(form.username.value),
+          host: sanitize(form.host.value),
+          port: sanitize(form.port.value),
+          tool: form.tool.value,
+          identity: sanitize(form.identity.value),
+          sshOptions: sanitize(form.sshOptions.value),
+          notes: sanitize(form.notes.value),
+          favorite: form.favorite.checked,
+          createdAt: now,
+          updatedAt: now,
+          lastUsedAt: null,
+        };
+
+        if (!server.name || !server.username || !server.host) {
+          formStatus.textContent = "Name, username, and host are required.";
+          return;
+        }
+        if (/\\s/.test(server.host)) {
+          formStatus.textContent = "Host cannot contain spaces.";
+          return;
+        }
+
+        if (state.editingId) {
+          const index = state.servers.findIndex((item) => item.id === state.editingId);
+          if (index !== -1) {
+            server.createdAt = state.servers[index].createdAt;
+            server.lastUsedAt = state.servers[index].lastUsedAt;
+            state.servers[index] = server;
+          }
+          formStatus.textContent = "Updated.";
+        } else {
+          const duplicate = state.servers.find((item) => {
+            return (
+              item.username === server.username &&
+              item.host === server.host &&
+              normalizePort(item.port) === normalizePort(server.port)
+            );
+          });
+          if (duplicate) {
+            formStatus.textContent = "Duplicate server exists.";
+            return;
+          }
+          state.servers.unshift(server);
+          formStatus.textContent = "Saved.";
+          state.page = 1;
+        }
+
+        save();
+        resetForm();
+        render();
+      };
+
+      form.addEventListener("submit", handleSubmit);
+      resetBtn.addEventListener("click", () => resetForm());
+
+      viewButtons.forEach((btn) => {
+        btn.addEventListener("click", () => setView(btn.dataset.view));
+      });
+
+      confirmCancelBtn.addEventListener("click", closeConfirm);
+      confirmModal.addEventListener("click", (event) => {
+        if (event.target === confirmModal) {
+          closeConfirm();
+        }
+      });
+      confirmActionBtn.addEventListener("click", () => {
+        if (confirmAction) {
+          confirmAction();
+        }
+        closeConfirm();
+      });
+
+      settingsForm.addEventListener("change", updateSettingsFromInputs);
+      themeInputs.forEach((input) => {
+        input.addEventListener("change", updateSettingsFromInputs);
+      });
+      document.addEventListener("change", (event) => {
+        if (event.target && event.target.name === "theme") {
+          updateSettingsFromInputs();
+        }
+      });
+      resetSettingsBtn.addEventListener("click", () => {
+        settings = { ...defaultSettings };
+        saveSettings();
+        applySettings();
+        syncSettingsForm();
+        state.page = 1;
+        render();
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !confirmModal.classList.contains("hidden")) {
+          closeConfirm();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && state.editingId && confirmModal.classList.contains("hidden")) {
+          resetForm();
+        }
+        if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+          if (!viewServers.classList.contains("hidden")) {
+            form.requestSubmit();
+          }
+        }
+      });
+
+      serverList.addEventListener("click", async (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        const action = target.dataset.action;
+        if (!action) return;
+        const card = target.closest("article");
+        if (!card) return;
+        const id = card.dataset.id;
+        if (!id) return;
+
+        if (action === "edit") {
+          const server = state.servers.find((item) => item.id === id);
+          if (!server) return;
+          fillForm(server);
+          enterEditMode(server);
+        }
+
+        if (action === "delete") {
+          const server = state.servers.find((item) => item.id === id);
+          if (!server) return;
+          openConfirm(server);
+        }
+
+        if (action === "copy-ssh" || action === "copy-monitor") {
+          const raw = decodeURIComponent(target.dataset.cmd || "");
+          if (!raw) return;
+          const success = await copyText(raw);
+          if (!success) {
+            window.prompt("Copy command:", raw);
+          } else {
+            showToast(action === "copy-ssh" ? "SSH copied" : "Monitor copied");
+          }
+          if (settings.autoMarkUsed) {
+            updateUsed(id);
+          }
+        }
+
+        if (action === "mark-used") {
+          updateUsed(id);
+        }
+      });
+
+      searchInput.addEventListener("input", (event) => {
+        state.filter = event.target.value.toLowerCase().trim();
+        state.page = 1;
+        render();
+      });
+
+      sortSelect.addEventListener("change", (event) => {
+        state.sort = event.target.value;
+        state.page = 1;
+        render();
+      });
+
+      prevPageBtn.addEventListener("click", () => {
+        if (state.page <= 1) return;
+        state.page -= 1;
+        render();
+      });
+
+      nextPageBtn.addEventListener("click", () => {
+        if (state.page >= state.pageCount) return;
+        state.page += 1;
+        render();
+      });
+
+      clearAllBtn.addEventListener("click", () => {
+        if (state.servers.length === 0) return;
+        const ok = window.confirm("Clear all servers? This cannot be undone.");
+        if (!ok) return;
+        state.servers = [];
+        state.page = 1;
+        save();
+        render();
+      });
+
+      exportBtn.addEventListener("click", () => {
+        const payload = JSON.stringify(state.servers, null, 2);
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "servers.json";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        showToast("Export ready");
+      });
+
+      importInput.addEventListener("change", async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const text = await file.text();
+        try {
+          const parsed = JSON.parse(text);
+          if (!Array.isArray(parsed)) throw new Error("Invalid format");
+          const mapped = parsed.map((server) => ({
+            id: server.id || uid(),
+            name: sanitize(server.name),
+            username: sanitize(server.username),
+            host: sanitize(server.host),
+            port: sanitize(server.port),
+            tool: server.tool === "btop" ? "btop" : "htop",
+            identity: sanitize(server.identity),
+            sshOptions: sanitize(server.sshOptions),
+            notes: sanitize(server.notes),
+            favorite: !!server.favorite,
+            createdAt: server.createdAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            lastUsedAt: server.lastUsedAt || null,
+          }));
+
+          const doImport = () => {
+            state.servers = mapped;
+            state.page = 1;
+            save();
+            render();
+            showToast("Import complete");
+          };
+
+          if (state.servers.length > 0) {
+            openConfirmAction({
+              title: "Import data",
+              message: "Replace current servers with imported data?",
+              confirmLabel: "Import",
+              danger: false,
+              onConfirm: doImport,
+            });
+          } else {
+            doImport();
+          }
+        } catch (err) {
+          window.alert(`Import failed: ${err.message}`);
+        }
+        importInput.value = "";
+      });
+
+      state.servers = load();
+      applySettings();
+      syncSettingsForm();
+      setView(localStorage.getItem(VIEW_KEY) || "servers");
+      render();
+    </script>
+  </body>
+</html>
