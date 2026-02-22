@@ -194,6 +194,12 @@
         flex: 1;
         min-height: 0;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .content-body.scroll-y {
+        overflow: auto;
+        padding-right: 4px;
       }
       .servers-view {
         display: grid;
@@ -201,16 +207,20 @@
         gap: 12px;
         min-height: 0;
         height: 100%;
+        flex: 1;
       }
       .settings-view {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
+        flex: 1;
+        min-height: 0;
       }
       .docs-view {
         display: grid;
         grid-template-columns: 1fr;
         gap: 12px;
+        flex: none;
       }
       .panel {
         border: 1px solid var(--border);
@@ -332,6 +342,17 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
+      .command.wrap {
+        white-space: pre-wrap;
+        overflow: visible;
+        text-overflow: initial;
+        word-break: break-word;
+      }
+      .command-row {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
       .footer {
         display: flex;
         align-items: center;
@@ -375,6 +396,9 @@
         border: 1px solid var(--border);
         background: var(--panel);
         padding: 12px;
+      }
+      .modal-card.wide {
+        width: min(760px, 96vw);
       }
       .modal-actions {
         display: flex;
@@ -468,11 +492,24 @@
         gap: 6px;
         font-size: 12px;
       }
+      .doc-commands {
+        display: grid;
+        gap: 10px;
+      }
       .doc-callout {
         border: 1px dashed var(--border);
         padding: 8px;
         font-size: 11px;
         color: var(--muted);
+      }
+      .setup-grid {
+        display: grid;
+        gap: 10px;
+      }
+      .setup-meta {
+        font-size: 12px;
+        color: var(--muted);
+        white-space: pre-wrap;
       }
       @media (max-width: 1050px) {
         .shell {
@@ -694,13 +731,52 @@
                 </ol>
               </section>
               <section class="panel">
+                <div class="panel-title">Key setup</div>
+                <ol class="doc-list">
+                  <li>Generate an ed25519 key pair.</li>
+                  <li>Copy the public key to the server.</li>
+                  <li>Test the new key.</li>
+                </ol>
+                <div class="doc-commands">
+                  <div class="command-row">
+                    <div class="footer">
+                      <span class="tiny">Generate key</span>
+                      <button id="docCopyKeygenBtn" data-action="copy-doc">Copy</button>
+                    </div>
+                    <div id="docKeygen" class="command wrap"></div>
+                  </div>
+                  <div class="command-row">
+                    <div class="footer">
+                      <span class="tiny">Copy key (ssh-copy-id)</span>
+                      <button id="docCopyIdBtn" data-action="copy-doc">Copy</button>
+                    </div>
+                    <div id="docCopyId" class="command wrap"></div>
+                  </div>
+                  <div class="command-row">
+                    <div class="footer">
+                      <span class="tiny">Manual copy</span>
+                      <button id="docManualBtn" data-action="copy-doc">Copy</button>
+                    </div>
+                    <div id="docManual" class="command wrap"></div>
+                  </div>
+                  <div class="command-row">
+                    <div class="footer">
+                      <span class="tiny">Test login</span>
+                      <button id="docTestBtn" data-action="copy-doc">Copy</button>
+                    </div>
+                    <div id="docTest" class="command wrap"></div>
+                  </div>
+                </div>
+                <div class="doc-callout">Tip: open Setup on a server for prefilled commands.</div>
+              </section>
+              <section class="panel">
                 <div class="panel-title">Notes</div>
                 <ul class="doc-list">
                   <li>Port defaults to 22.</li>
                   <li>Settings has theme + import/export.</li>
                   <li>Everything stays in your browser.</li>
                 </ul>
-                <div class="doc-callout">Tip: click any command to copy.</div>
+                <div class="doc-callout">Tip: ssh-copy-id is optional; manual copy works everywhere.</div>
               </section>
             </div>
           </div>
@@ -719,6 +795,47 @@
       </div>
     </div>
 
+    <div id="setupModal" class="modal hidden" aria-hidden="true">
+      <div class="modal-card wide">
+        <div class="panel-title">
+          <span id="setupTitle">Server setup</span>
+          <button id="setupCloseBtn">Close</button>
+        </div>
+        <div id="setupMeta" class="setup-meta"></div>
+        <div class="setup-grid">
+          <div class="command-row">
+            <div class="footer">
+              <span class="tiny">1. Generate key</span>
+              <button id="setupCopyKeygenBtn" data-action="copy-setup">Copy</button>
+            </div>
+            <div id="setupKeygen" class="command wrap"></div>
+          </div>
+          <div class="command-row">
+            <div class="footer">
+              <span class="tiny">2. Copy key (ssh-copy-id)</span>
+              <button id="setupCopyIdBtn" data-action="copy-setup">Copy</button>
+            </div>
+            <div id="setupCopyId" class="command wrap"></div>
+          </div>
+          <div class="command-row">
+            <div class="footer">
+              <span class="tiny">3. Manual copy</span>
+              <button id="setupManualBtn" data-action="copy-setup">Copy</button>
+            </div>
+            <div id="setupManual" class="command wrap"></div>
+          </div>
+          <div class="command-row">
+            <div class="footer">
+              <span class="tiny">4. Test login</span>
+              <button id="setupTestBtn" data-action="copy-setup">Copy</button>
+            </div>
+            <div id="setupTest" class="command wrap"></div>
+          </div>
+        </div>
+        <div class="doc-callout">Key file name is derived from the server name + host.</div>
+      </div>
+    </div>
+
     <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
     <template id="serverCardTemplate">
@@ -729,6 +846,7 @@
             <p class="server-meta" data-field="meta"></p>
           </div>
           <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button data-action="setup">Setup</button>
             <button data-action="edit">Edit</button>
             <button data-action="delete" class="danger">Delete</button>
           </div>
@@ -786,6 +904,7 @@
       const viewSettings = document.getElementById("view-settings");
       const viewDocs = document.getElementById("view-docs");
       const viewButtons = document.querySelectorAll("[data-view]");
+      const contentBody = document.querySelector(".content-body");
       const themeInputs = document.querySelectorAll('input[name="theme"]');
       const confirmModal = document.getElementById("confirmModal");
       const confirmTitle = document.getElementById("confirmTitle");
@@ -793,6 +912,26 @@
       const confirmCancelBtn = document.getElementById("confirmCancelBtn");
       const confirmActionBtn = document.getElementById("confirmActionBtn");
       const toast = document.getElementById("toast");
+      const setupModal = document.getElementById("setupModal");
+      const setupTitle = document.getElementById("setupTitle");
+      const setupMeta = document.getElementById("setupMeta");
+      const setupCloseBtn = document.getElementById("setupCloseBtn");
+      const setupKeygen = document.getElementById("setupKeygen");
+      const setupCopyId = document.getElementById("setupCopyId");
+      const setupManual = document.getElementById("setupManual");
+      const setupTest = document.getElementById("setupTest");
+      const setupCopyKeygenBtn = document.getElementById("setupCopyKeygenBtn");
+      const setupCopyIdBtn = document.getElementById("setupCopyIdBtn");
+      const setupManualBtn = document.getElementById("setupManualBtn");
+      const setupTestBtn = document.getElementById("setupTestBtn");
+      const docKeygen = document.getElementById("docKeygen");
+      const docCopyId = document.getElementById("docCopyId");
+      const docManual = document.getElementById("docManual");
+      const docTest = document.getElementById("docTest");
+      const docCopyKeygenBtn = document.getElementById("docCopyKeygenBtn");
+      const docCopyIdBtn = document.getElementById("docCopyIdBtn");
+      const docManualBtn = document.getElementById("docManualBtn");
+      const docTestBtn = document.getElementById("docTestBtn");
 
       const STORAGE_KEY = "shh_servers_v1";
       const SETTINGS_KEY = "shh_settings_v1";
@@ -820,6 +959,20 @@
       const uid = () => Math.random().toString(36).slice(2, 9);
 
       const sanitize = (value) => (value || "").toString().trim();
+
+      const slugify = (value) => {
+        return sanitize(value)
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+      };
+
+      const buildKeyPath = (server) => {
+        const nameSlug = slugify(server.name);
+        const hostSlug = slugify(server.host);
+        const suffix = [nameSlug, hostSlug].filter(Boolean).join("_");
+        return `~/.ssh/id_ed25519_${suffix || "server"}`;
+      };
 
       const normalizePort = (value) => {
         const port = parseInt(value, 10);
@@ -935,6 +1088,7 @@
         viewServers.classList.toggle("hidden", view !== "servers");
         viewSettings.classList.toggle("hidden", view !== "settings");
         viewDocs.classList.toggle("hidden", view !== "docs");
+        contentBody.classList.toggle("scroll-y", view === "docs");
         viewButtons.forEach((btn) => {
           btn.classList.toggle("active", btn.dataset.view === view);
         });
@@ -989,6 +1143,55 @@
         confirmAction = onConfirm;
         confirmModal.classList.remove("hidden");
         confirmModal.setAttribute("aria-hidden", "false");
+      };
+
+      const openSetup = (server) => {
+        const port = normalizePort(server.port);
+        const keyPath = buildKeyPath(server);
+        const keygenCmd = `ssh-keygen -t ed25519 -f ${keyPath} -C "${server.username}@${server.host}"`;
+        const copyIdCmd = `ssh-copy-id -i ${keyPath}.pub -p ${port} ${server.username}@${server.host}`;
+        const manualCmd = `cat ${keyPath}.pub | ssh -p ${port} ${server.username}@${server.host} 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'`;
+        const testCmd = `ssh -i ${keyPath} -p ${port} ${server.username}@${server.host}`;
+
+        setupTitle.textContent = `Setup ${server.name}`;
+        setupMeta.textContent = `${server.username}@${server.host}:${port}\nKey file: ${keyPath}`;
+        setupKeygen.textContent = keygenCmd;
+        setupCopyId.textContent = copyIdCmd;
+        setupManual.textContent = manualCmd;
+        setupTest.textContent = testCmd;
+        setupCopyKeygenBtn.dataset.cmd = encodeURIComponent(keygenCmd);
+        setupCopyIdBtn.dataset.cmd = encodeURIComponent(copyIdCmd);
+        setupManualBtn.dataset.cmd = encodeURIComponent(manualCmd);
+        setupTestBtn.dataset.cmd = encodeURIComponent(testCmd);
+
+        setupModal.classList.remove("hidden");
+        setupModal.setAttribute("aria-hidden", "false");
+      };
+
+      const closeSetup = () => {
+        setupModal.classList.add("hidden");
+        setupModal.setAttribute("aria-hidden", "true");
+      };
+
+      const applyDocCommands = () => {
+        if (!docKeygen) return;
+        const docUser = "user";
+        const docHost = "203.0.113.10";
+        const docPort = 22;
+        const docKeyPath = "~/.ssh/id_ed25519";
+        const keygenCmd = `ssh-keygen -t ed25519 -f ${docKeyPath} -C "${docUser}@${docHost}"`;
+        const copyIdCmd = `ssh-copy-id -i ${docKeyPath}.pub -p ${docPort} ${docUser}@${docHost}`;
+        const manualCmd = `cat ${docKeyPath}.pub | ssh -p ${docPort} ${docUser}@${docHost} 'mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys'`;
+        const testCmd = `ssh -i ${docKeyPath} -p ${docPort} ${docUser}@${docHost}`;
+
+        docKeygen.textContent = keygenCmd;
+        docCopyId.textContent = copyIdCmd;
+        docManual.textContent = manualCmd;
+        docTest.textContent = testCmd;
+        docCopyKeygenBtn.dataset.cmd = encodeURIComponent(keygenCmd);
+        docCopyIdBtn.dataset.cmd = encodeURIComponent(copyIdCmd);
+        docManualBtn.dataset.cmd = encodeURIComponent(manualCmd);
+        docTestBtn.dataset.cmd = encodeURIComponent(testCmd);
       };
 
       const showToast = (message) => {
@@ -1196,6 +1399,42 @@
         closeConfirm();
       });
 
+      setupCloseBtn.addEventListener("click", closeSetup);
+      setupModal.addEventListener("click", (event) => {
+        if (event.target === setupModal) {
+          closeSetup();
+        }
+      });
+      setupModal.addEventListener("click", async (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        const button = target.closest('[data-action="copy-setup"]');
+        if (!button) return;
+        const raw = decodeURIComponent(button.dataset.cmd || "");
+        if (!raw) return;
+        const success = await copyText(raw);
+        if (!success) {
+          window.prompt("Copy command:", raw);
+        } else {
+          showToast("Setup command copied");
+        }
+      });
+
+      viewDocs.addEventListener("click", async (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        const button = target.closest('[data-action="copy-doc"]');
+        if (!button) return;
+        const raw = decodeURIComponent(button.dataset.cmd || "");
+        if (!raw) return;
+        const success = await copyText(raw);
+        if (!success) {
+          window.prompt("Copy command:", raw);
+        } else {
+          showToast("Doc command copied");
+        }
+      });
+
       settingsForm.addEventListener("change", updateSettingsFromInputs);
       themeInputs.forEach((input) => {
         input.addEventListener("change", updateSettingsFromInputs);
@@ -1215,7 +1454,12 @@
       });
 
       document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && !confirmModal.classList.contains("hidden")) {
+        if (event.key !== "Escape") return;
+        if (!setupModal.classList.contains("hidden")) {
+          closeSetup();
+          return;
+        }
+        if (!confirmModal.classList.contains("hidden")) {
           closeConfirm();
         }
       });
@@ -1240,6 +1484,12 @@
         if (!card) return;
         const id = card.dataset.id;
         if (!id) return;
+
+        if (action === "setup") {
+          const server = state.servers.find((item) => item.id === id);
+          if (!server) return;
+          openSetup(server);
+        }
 
         if (action === "edit") {
           const server = state.servers.find((item) => item.id === id);
@@ -1372,6 +1622,7 @@
       state.servers = load();
       applySettings();
       syncSettingsForm();
+      applyDocCommands();
       setView(localStorage.getItem(VIEW_KEY) || "servers");
       render();
     </script>
