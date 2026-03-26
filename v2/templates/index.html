@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSH Keeper</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="app">
+    <!-- Header -->
+    <header class="header" id="main-header">
+        <h1>SSH <span>Keeper</span></h1>
+        <div class="header-actions">
+            <button class="btn btn-sm" onclick="showSettings()">Settings</button>
+            <button class="btn btn-sm" onclick="toggleTheme()">Theme</button>
+            <button class="btn btn-sm btn-danger" onclick="handleLogout()">Logout</button>
+        </div>
+    </header>
+
+    <!-- Setup View -->
+    <div class="view" id="view-setup">
+        <div class="auth-container">
+            <div id="setup-step-1">
+                <h2>Welcome</h2>
+                <p>Create your account to get started. Choose a strong password.</p>
+                <form onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="setup-username" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="setup-password" required minlength="10" autocomplete="new-password">
+                        <small style="color: var(--text-dim); font-size: 0.75rem;">
+                            Min 10 chars, uppercase, lowercase, digit
+                        </small>
+                    </div>
+                    <button class="btn btn-primary" style="width:100%;">Create Account</button>
+                </form>
+            </div>
+            <div id="setup-step-2" style="display: none;">
+                <h2>Set Up 2FA</h2>
+                <p>Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)</p>
+                <div class="qr-container">
+                    <div id="qr-display"></div>
+                    <div class="totp-secret" id="totp-secret-display"></div>
+                </div>
+                <form onsubmit="handleVerifySetup(event)">
+                    <div class="form-group">
+                        <label>Enter code from app</label>
+                        <input type="text" id="setup-totp-code" required pattern="\d{6}" maxlength="6"
+                               placeholder="000000" autocomplete="one-time-code">
+                    </div>
+                    <button class="btn btn-primary" style="width:100%;">Verify &amp; Continue</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login View -->
+    <div class="view" id="view-login">
+        <div class="auth-container">
+            <h2>Sign In</h2>
+            <p>Enter your credentials and 2FA code.</p>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="login-username" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" required autocomplete="current-password">
+                </div>
+                <div class="form-group">
+                    <label>2FA Code</label>
+                    <input type="text" id="login-totp" required pattern="\d{6}" maxlength="6"
+                           placeholder="000000" autocomplete="one-time-code">
+                </div>
+                <button class="btn btn-primary" style="width:100%;">Sign In</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Servers View -->
+    <div class="view" id="view-servers">
+        <div class="servers-toolbar">
+            <div class="search-box">
+                <input type="text" placeholder="Search servers..." oninput="handleSearch(event)">
+            </div>
+            <button class="btn btn-primary" onclick="openAddServer()">+ Add Server</button>
+        </div>
+        <div class="server-grid" id="server-grid"></div>
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- Settings View -->
+    <div class="view" id="view-settings">
+        <div style="margin-bottom: 16px;">
+            <button class="btn" onclick="backToServers()">&larr; Back</button>
+        </div>
+        <div class="settings-section">
+            <h3>Accent Color</h3>
+            <div class="color-options" id="accent-colors"></div>
+        </div>
+        <div class="settings-section">
+            <h3>Theme</h3>
+            <p style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 12px;">
+                Toggle between dark and light mode using the Theme button in the header.
+            </p>
+        </div>
+    </div>
+
+    <!-- Add/Edit Server Modal -->
+    <div class="modal-overlay" id="modal-server">
+        <div class="modal">
+            <h2 id="modal-server-title">Add Server</h2>
+            <form id="server-form" onsubmit="handleServerSubmit(event)">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="srv-name" required placeholder="My Server">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Default IP / Hostname</label>
+                        <input type="text" id="srv-ip" required placeholder="192.168.1.100">
+                    </div>
+                    <div class="form-group">
+                        <label>Secondary IP / URL</label>
+                        <input type="text" id="srv-ip2" placeholder="Optional">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Port</label>
+                        <input type="number" id="srv-port" value="22" min="1" max="65535">
+                    </div>
+                    <div class="form-group">
+                        <label>SSH User</label>
+                        <input type="text" id="srv-user" required placeholder="root">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Monitor Tool</label>
+                        <select id="srv-monitor">
+                            <option value="btop">btop</option>
+                            <option value="htop">htop</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea id="srv-notes" placeholder="Optional notes..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="closeModal('modal-server')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="modal-delete">
+        <div class="modal">
+            <h2>Delete Server</h2>
+            <p style="margin-bottom: 16px; color: var(--text-dim);">
+                Type <strong id="delete-server-name" style="color: var(--danger);"></strong> to confirm deletion.
+            </p>
+            <div class="form-group">
+                <input type="text" id="delete-confirm-input" placeholder="Type server name..."
+                       onkeydown="if(event.key==='Enter')handleDeleteConfirm()">
+            </div>
+            <div class="modal-actions">
+                <button class="btn" onclick="closeModal('modal-delete')">Cancel</button>
+                <button class="btn btn-danger" onclick="handleDeleteConfirm()">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
