@@ -1,5 +1,5 @@
 # This project
-### is my ongoing atempt to make a nice SSH access intoface
+Is my ongoing atempt to make a nice SSH access interface
 
 ## v1
 #### V1 is just a html script
